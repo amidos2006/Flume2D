@@ -39,6 +39,10 @@ public class Entity implements Disposable
 		setMask(mask);
 		this.layer = 0;
 		this.followCamera = true;
+		
+		this.addedTweens = new LinkedList<Tween>();
+		this.removedTweens = new LinkedList<Tween>();
+		this.updateTweens = new LinkedList<Tween>();
 	}
 	
 	public void AddTween(Tween t)

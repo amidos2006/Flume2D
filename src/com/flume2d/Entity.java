@@ -8,6 +8,7 @@ import com.flume2d.graphics.Backdrop;
 import com.flume2d.graphics.Graphic;
 import com.flume2d.masks.*;
 import com.flume2d.math.*;
+import com.flume2d.tween.Tween;
 
 public class Entity implements Disposable
 {
@@ -38,6 +39,24 @@ public class Entity implements Disposable
 		setMask(mask);
 		this.layer = 0;
 		this.followCamera = true;
+	}
+	
+	public void AddTween(Tween t)
+	{
+		AddTween(t, false);
+	}
+	
+	public void AddTween(Tween t, boolean start)
+	{
+		if (t.hasParent()) return;
+		t.setParent(this);
+		addedTweens.add(t);
+	}
+	
+	public void RemoveTween(Tween t)
+	{
+		if(!t.hasParent()) return;
+		removedTweens.add(t);
 	}
 	
 	/**
@@ -114,6 +133,45 @@ public class Entity implements Disposable
 	public void update(float dt)
 	{
 		if (graphic != null && graphic.isActive()) graphic.update(dt);
+		
+		Iterator<Tween> it = updateTweens.iterator();
+		while (it.hasNext())
+		{
+			Tween t = it.next();
+			t.update(dt);
+		}
+		updateLists();
+	}
+	
+	private void updateLists()
+	{
+		Object[] list;
+		
+		// add any new entities
+		if (addedTweens.size() > 0)
+		{
+			// copy list to array for traversal
+			list = addedTweens.toArray();
+			addedTweens.clear();
+			for (int i = 0; i < list.length; i++)
+			{
+				Tween t = (Tween) list[i];
+				updateTweens.add(t);
+			}
+		}
+		
+		// remove any old entities
+		if (removedTweens.size() > 0)
+		{
+			// copy list to array for traversal
+			list = removedTweens.toArray();
+			removedTweens.clear();
+			for (int i = 0; i < list.length; i++)
+			{
+				Tween t = (Tween) list[i];
+				updateTweens.remove(t);
+			}
+		}
 	}
 	
 	/**
@@ -199,6 +257,10 @@ public class Entity implements Disposable
 
 	private Graphic graphic;
 	private Mask mask;
+	
+	private LinkedList<Tween> addedTweens;
+	private LinkedList<Tween> removedTweens;
+	private LinkedList<Tween> updateTweens;
 	
 	protected World world;
 	

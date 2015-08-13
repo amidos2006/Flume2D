@@ -2,6 +2,7 @@ package com.flume2d;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Random;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -17,6 +18,7 @@ import com.flume2d.audio.Sfx;
 public class F2D {
 	private static float volume;
 	private static LinkedList<Sfx> sfxCache;
+	private static Random random;
 	
 	public static Engine engine;
 	public static OrthographicCamera camera;
@@ -32,6 +34,7 @@ public class F2D {
 		engine = e;
 		smooth = false;
 		volume = 1;
+		random = new Random(System.currentTimeMillis());
 		sfxCache = new LinkedList<Sfx>();
 		windowWidth = Gdx.graphics.getWidth();
 		windowHeight = Gdx.graphics.getHeight();
@@ -101,5 +104,25 @@ public class F2D {
 				Math.abs(secondPoint.x - firstPoint.x), Math.abs(secondPoint.y - firstPoint.y));
 		
 		return rect;
+	}
+	
+	public static void SetSeed(long seed)
+	{
+		random.setSeed(seed);
+	}
+	
+	public static void ResetSeed()
+	{
+		random.setSeed(System.currentTimeMillis());
+	}
+	
+	public static float Random()
+	{
+		return random.nextFloat();
+	}
+	
+	public static int Random(int max)
+	{
+		return random.nextInt(max);
 	}
 }

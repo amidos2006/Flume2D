@@ -9,24 +9,26 @@ Flume is currently in an alpha state. This means that there are likely to be bug
 
 Features
 ------------------------
-* Sprite, Tilemap, and Canvas rendering
+* Image, Spritemap, Tilemap, Backdrop, Text, BitmapText and Canvas rendering
 	* Rotated image calculation
 	* Layered graphic lists
 * Input handling with key-mapping
-* Scene management/sorting
+* World Management/Sorting
 	* Layer based rendering (z-index)
 	* Type based collision handling (ex. player VS enemy)
 * SAT collision
 	* Similar to FlashPunk masks
 	* AABB, Circle, Grid and Polygon collision
 * Basic UDP Networking
-* Motion helpers (tweens)
+* Tweens similar to FlashPunk
+	* Alarm
+	* VarTween
+	* MotionTween
 
 Todo
 ------------------------
 * Particle System
 * Collision Polygon editor
-* Font rendering
 * GUI
 
 License

@@ -63,7 +63,7 @@ public class Grid extends Mask
 	@Override
 	public Vector2 collide(Mask mask)
 	{
-		Rectangle bounds = mask.getBounds();
+		//Rectangle bounds = mask.getBounds();
 		
 		return null;
 	}

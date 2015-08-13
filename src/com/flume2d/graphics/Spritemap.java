@@ -1,21 +1,31 @@
 package com.flume2d.graphics;
 
 import java.util.*;
-
-import com.flume2d.*;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.flume2d.callback.IVoidVoid;
 
 public class Spritemap extends Image
 {
-
 	public Spritemap(String filename, int width, int height)
+	{
+		this(filename, width, height, null);
+	}
+	
+	public Spritemap(String filename, int width, int height, IVoidVoid endFunction)
 	{
 		super(filename);
 		frameWidth = width;
 		frameHeight = height;
+		regions = TextureRegion.split(image, frameWidth, frameHeight);
 		cells = imageWidth / frameWidth;
 		
 		animations = new HashMap<String, Animation>();
+		this.endFunction = endFunction;
+		animationFinished = false;
 		frameTime = 0;
+		currentAnim = null;
 	}
 	
 	public void add(String name, int[] frames)
@@ -28,19 +38,20 @@ public class Spritemap extends Image
 		add(name, frames, delay, true);
 	}
 	
-	public void add(String name, int[] list, float delay, boolean loop)
+	public void add(String name, int[] list, float fps, boolean loop)
 	{
-		Animation a = new Animation();
-		a.frames = list;
-		a.delay = delay;
-		a.loop = loop;
-		a.name = name;
+		TextureRegion[] frames = new TextureRegion[list.length];
+		for(int i=0; i<list.length;i++)
+		{
+			frames[i] = regions[list[i] / cells][list[i] % cells];
+		}
+		Animation a = new Animation(fps / list.length, frames);
+		a.setPlayMode(Animation.PlayMode.NORMAL);
+		if(loop)
+		{
+			a.setPlayMode(Animation.PlayMode.LOOP);
+		}
 		animations.put(name, a);
-	}
-
-	public void add(Animation anim)
-	{
-		animations.put(anim.name, anim);
 	}
 	
 	public void play(String name)
@@ -50,45 +61,45 @@ public class Spritemap extends Image
 	
 	public void play(String name, boolean reset)
 	{
-		if (reset || (currentAnim != null && name.equals(currentAnim.name) == false))
+		if (reset || (currentAnim == null && name != currentAnim))
 		{
-			if (currentAnim != null) currentAnim.frame = 0;
 			frameTime = 0;
+			animationFinished = false;
 		}
-		currentAnim = animations.get(name);
+		currentAnim = name;
 	}
 	
 	@Override
-	public void update()
+	public void update(float dt)
 	{
 		if (currentAnim != null)
 		{
 			// set the frame to display
-			int index = currentAnim.frames[currentAnim.frame];
-			frameX = index % cells * frameWidth;
-			frameY = index / cells * frameWidth;
+			frameX = animations.get(currentAnim).getKeyFrame(frameTime).getRegionX();
+			frameY = animations.get(currentAnim).getKeyFrame(frameTime).getRegionY();
+			if(!animationFinished && animations.get(currentAnim).getPlayMode() == PlayMode.NORMAL
+					&& animations.get(currentAnim).isAnimationFinished(frameTime))
+			{
+				animationFinished = true;
+				if(endFunction != null)
+				{
+					endFunction.Execute();
+				}
+			}
 			
-			// check if the frame can advance
-			frameTime += Engine.elapsed;
-			if (currentAnim.delay > 0 && frameTime > currentAnim.delay)
-				advance();
+			frameTime += dt;
 		}
-		super.update();
-	}
-	
-	public void advance()
-	{
-		currentAnim.frame += 1;
-		if (currentAnim.frame >= currentAnim.frames.length)
-			currentAnim.frame = 0;
-		frameTime = 0;
+		super.update(dt);
 	}
 	
 	@Override public boolean isActive() { return true; }
 	
+	private TextureRegion[][] regions;
 	private HashMap<String, Animation> animations;
-	private Animation currentAnim;
-	private double frameTime;
+	private IVoidVoid endFunction;
+	private String currentAnim;
+	private float frameTime;
+	private boolean animationFinished;
 	private int cells; // horizontal cells
 
 }

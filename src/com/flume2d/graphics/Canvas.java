@@ -1,37 +1,28 @@
 package com.flume2d.graphics;
 
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.flume2d.F2D;
 
 public class Canvas implements Graphic
-{
-	
+{	
 	public Canvas(int width, int height)
-	{
-		this(width, height, false);
-	}
-	
-	public Canvas(int width, int height, boolean clearOnRender)
 	{
 		canvas = new Pixmap(width, height, Pixmap.Format.RGB565);
 		texture = new Texture(canvas);
-		this.clearOnRender = clearOnRender;
-	}
-	
-	public void moveTo(int x, int y)
-	{
-		posx = x;
-		posy = y;
-	}
-	
-	public void lineTo(int x, int y)
-	{
-		canvas.drawLine(posx, posy, x, y);
-	}
-	
-	public void fillRect(int width, int height)
-	{
-		canvas.fillRectangle(posx, posy, width, height);
+		if(F2D.smooth)
+		{
+			Pixmap.setFilter(Pixmap.Filter.BiLinear);
+			texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+		}
+		else
+		{
+			Pixmap.setFilter(Pixmap.Filter.NearestNeighbour);
+			texture.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+		}
+		clear(Color.BLACK);
+		setColor(1, 1, 1, 1);
 	}
 	
 	public void setColor(float r, float g, float b, float a)
@@ -39,11 +30,46 @@ public class Canvas implements Graphic
 		canvas.setColor(r, g, b, a);
 	}
 	
-	public void clear()
+	public void lineTo(int x1, int y1, int x2, int y2)
 	{
-//		canvas.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+		canvas.drawLine(x1, y1, x2, y2);
 	}
-
+	
+	public void drawRect(int x, int y, int width, int height, boolean isOutline)
+	{
+		if(isOutline)
+		{
+			canvas.drawRectangle(x, y, width, height);
+		}
+		else
+		{
+			canvas.fillRectangle(x, y, width, height);
+		}
+	}
+	
+	public void drawCircle(int x, int y, int radius, boolean isOutline)
+	{
+		if(isOutline)
+		{
+			canvas.drawCircle(x, y, radius);
+		}
+		else
+		{
+			canvas.fillCircle(x, y, radius);
+		}
+	}
+	
+	public void setPixel(int x, int y)
+	{
+		canvas.drawPixel(x, y);
+	}
+	
+	public void clear(Color clearColor)
+	{
+		setColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+		canvas.fillRectangle(0, 0, canvas.getWidth(), canvas.getHeight());
+	}
+	
 	@Override
 	public boolean isVisible()
 	{
@@ -51,10 +77,9 @@ public class Canvas implements Graphic
 	}
 
 	@Override
-	public void render(SpriteBatch spriteBatch)
+	public void render(SpriteBatch spriteBatch, float x, float y)
 	{
-		spriteBatch.draw(texture, 0, 0);
-		if (clearOnRender) clear();
+		spriteBatch.draw(texture, x, y);
 	}
 
 	@Override
@@ -64,7 +89,7 @@ public class Canvas implements Graphic
 	}
 
 	@Override
-	public void update()
+	public void update(float dt)
 	{
 	}
 	
@@ -77,7 +102,4 @@ public class Canvas implements Graphic
 	
 	private Pixmap canvas;
 	private Texture texture;
-	private int posx, posy;
-	private boolean clearOnRender;
-
 }

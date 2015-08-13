@@ -1,10 +1,11 @@
 package com.flume2d.graphics;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Disposable;
+import com.flume2d.F2D;
 
 public class Tilemap implements Graphic, Disposable
 {
@@ -19,9 +20,19 @@ public class Tilemap implements Graphic, Disposable
 		if (filename != null)
 		{
 			tileset = new Texture(filename);
+			if(F2D.smooth)
+			{
+				tileset.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+			}
+			else
+			{
+				tileset.setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+			}
 		}
 		this.tileWidth = tileWidth;
 		this.tileHeight = tileHeight;
+		this.scale = 1;
+		this.color = Color.WHITE.cpy();
 		this.columns = columns;
 		this.rows = rows;
 		this.width = columns * tileWidth;
@@ -30,59 +41,38 @@ public class Tilemap implements Graphic, Disposable
 		this.margin = margin;
 		
 		tiles = new int[columns][rows];
-		dirty = false;
-		
-		if (Gdx.graphics.isGL20Available())
-		{
-			// TODO: fix framebuffer logic
-//			frameBuffer = new FrameBuffer(Pixmap.Format.RGBA4444, pow2(width), pow2(height), false);
-		}
-	}
-	
-	private int pow2(int val)
-	{
-		int pow = 2;
-		while (pow < val)
-			pow = pow * 2;
-		return pow;
 	}
 	
 	@Override
 	public void dispose()
 	{
-		if (frameBuffer != null) frameBuffer.dispose();
 		tileset.dispose();
 	}
 	
 	@Override
-	public void render(SpriteBatch spriteBatch)
+	public void render(SpriteBatch spriteBatch, float x, float y)
 	{
 		if (tileset == null) return;
 		
-		if (Gdx.graphics.isGL20Available() && frameBuffer != null)
-		{
-			if (dirty)
-			{
-				drawToFrameBuffer(spriteBatch);
-				dirty = false;
-			}
-			spriteBatch.draw(frameBuffer.getColorBufferTexture(), 0, 0);
-		}
-		else
-		{
-			drawBatch(spriteBatch);
-		}
+		drawBatch(spriteBatch, x, y);
 	}
 	
-	private void drawBatch(SpriteBatch spriteBatch)
+	private void drawBatch(SpriteBatch spriteBatch, float x, float y)
 	{
 		int tile, tileX, tileY;
 		TextureRegion region = new TextureRegion(tileset);
 		int tileCols = (tileset.getWidth() - margin * 2) / (tileWidth + spacing);
 		
-		for (int tx = 0; tx < columns; tx++)
+		Rectangle rect = F2D.GetRenderRectangle();
+		int startX = (int)((rect.x - x) / (tileWidth * scale)) - 1;
+		int startY = (int)((rect.y - y) / (tileHeight * scale)) - 1;
+		int endX = (int)(rect.width / (tileWidth * scale)) + startX + 2;
+		int endY = (int)(rect.height / (tileHeight * scale)) + startY + 2;
+		
+		spriteBatch.setColor(color);
+		for (int tx = Math.max(0, startX); tx < Math.min(columns, endX); tx++)
 		{
-			for (int ty = 0; ty < rows; ty++)
+			for (int ty = Math.max(0, startY); ty < Math.min(rows, endY); ty++)
 			{
 				tile = tiles[tx][ty];
 				if (tile == -1) continue; // skip empty tiles
@@ -95,29 +85,9 @@ public class Tilemap implements Graphic, Disposable
 						(tileY * tileHeight) + (spacing * tileY) + margin,
 						tileWidth, tileHeight);
 				region.flip(false, true);
-				spriteBatch.draw(region, tx * tileWidth, ty * tileHeight);
+				spriteBatch.draw(region, tx * tileWidth * scale + x, ty * tileHeight * scale + y, scale * tileWidth, scale * tileHeight);
 			}
 		}
-	}
-	
-	private void drawToFrameBuffer(SpriteBatch spriteBatch)
-	{
-		GL20 gl = Gdx.graphics.getGL20();
-		
-		// clear the sprite batch before rendering to a buffer
-		spriteBatch.flush();
-		frameBuffer.begin();
-		gl.glViewport( 0, 0, frameBuffer.getWidth(), frameBuffer.getHeight() );
-		gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
-		
-		drawBatch(spriteBatch);
-		
-		// flush the sprite batch onto the buffer
-		spriteBatch.flush();
-		frameBuffer.end();
-		
-		gl.glViewport( 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() );
-		gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
 	}
 
 	public void setTile(int x, int y, int tile)
@@ -125,7 +95,6 @@ public class Tilemap implements Graphic, Disposable
 		if (x >= columns || y >= rows) return;
 		
 		tiles[x][y] = tile;
-		dirty = true;
 	}
 	
 	public int getTile(int x, int y)
@@ -149,12 +118,14 @@ public class Tilemap implements Graphic, Disposable
 	public int getWidth() { return width; }
 	public int getHeight() { return height; }
 	
-	@Override public void update() { }
+	@Override public void update(float dt) { }
 	@Override public boolean isActive() { return false; }
 	@Override public boolean isVisible() { return true; }
 	
 	public int columns;
 	public int rows;
+	public Color color;
+	public float scale;
 	
 	private int width;
 	private int height;
@@ -166,7 +137,5 @@ public class Tilemap implements Graphic, Disposable
 	
 	private int[][] tiles;
 	private Texture tileset;
-	private FrameBuffer frameBuffer;
-	private boolean dirty;
 
 }

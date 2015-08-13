@@ -4,7 +4,7 @@ import java.util.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
-import com.flume2d.Engine;
+import com.flume2d.F2D;
 
 public class Input implements InputProcessor
 {
@@ -103,8 +103,8 @@ public class Input implements InputProcessor
 	@Override
 	public boolean touchDown(int x, int y, int pointer, int button)
 	{
-		x = x * Engine.width / Gdx.graphics.getWidth();
-		y = y * Engine.height / Gdx.graphics.getHeight();
+		x = x * F2D.windowWidth / Gdx.graphics.getWidth();
+		y = y * F2D.windowHeight / Gdx.graphics.getHeight();
 		if (touches.containsKey(pointer))
 		{
 			Touch touch = touches.get(pointer);
@@ -125,8 +125,8 @@ public class Input implements InputProcessor
 	@Override
 	public boolean touchDragged(int x, int y, int pointer)
 	{
-		x = x * Engine.width / Gdx.graphics.getWidth();
-		y = y * Engine.height / Gdx.graphics.getHeight();
+		x = x * F2D.windowWidth / Gdx.graphics.getWidth();
+		y = y * F2D.windowHeight / Gdx.graphics.getHeight();
 		if (touches.containsKey(pointer))
 		{
 			Touch touch = touches.get(pointer);
@@ -136,11 +136,10 @@ public class Input implements InputProcessor
 		return true;
 	}
 
-	@Override
 	public boolean touchMoved(int x, int y)
 	{
-		x = x * Engine.width / Gdx.graphics.getWidth();
-		y = y * Engine.height / Gdx.graphics.getHeight();
+		x = x * F2D.windowWidth / Gdx.graphics.getWidth();
+		y = y * F2D.windowHeight / Gdx.graphics.getHeight();
 		if (touches.containsKey(0))
 		{
 			Touch touch = touches.get(0);
@@ -158,6 +157,12 @@ public class Input implements InputProcessor
 			touches.remove(pointer);
 		}
 		return true;
+	}
+
+	@Override
+	public boolean mouseMoved(int screenX, int screenY) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 	
 }

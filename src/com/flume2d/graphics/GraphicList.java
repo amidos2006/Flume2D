@@ -61,14 +61,13 @@ public class GraphicList implements Graphic
 	}
 
 	@Override
-	public void render(SpriteBatch spriteBatch)
+	public void render(SpriteBatch spriteBatch, float x, float y)
 	{
 		Iterator<Graphic> it = graphics.iterator();
 		while(it.hasNext())
 		{
 			Graphic graphic = it.next();
-			if (graphic.isVisible()) graphic.render(spriteBatch);
-			if (graphic.isActive()) graphic.update();
+			if (graphic.isVisible()) graphic.render(spriteBatch, x, y);
 		}
 	}
 
@@ -79,8 +78,14 @@ public class GraphicList implements Graphic
 	}
 
 	@Override
-	public void update()
+	public void update(float dt)
 	{
+		Iterator<Graphic> it = graphics.iterator();
+		while(it.hasNext())
+		{
+			Graphic graphic = it.next();
+			if (graphic.isActive()) graphic.update(dt);
+		}
 	}
 	
 	private LinkedList<Graphic> graphics;

@@ -1,6 +1,5 @@
 package com.flume2d.tween;
 
-import com.flume2d.Engine;
 import com.flume2d.tween.easing.*;
 
 public class Motion
@@ -33,9 +32,9 @@ public class Motion
 		return value;
 	}
 	
-	public void update()
+	public void update(float dt)
 	{
-		time += Engine.elapsed;
+		time += dt;
 		value = ease.tick(time, begin, change, duration);
 	}
 	

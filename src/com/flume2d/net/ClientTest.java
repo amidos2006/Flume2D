@@ -57,8 +57,9 @@ public class ClientTest extends Connection
 	
 	public static void main(String[] args)
 	{
+		ClientTest test;
 		try {
-			ClientTest test = new ClientTest();
+			test = new ClientTest();
 			test.register();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();

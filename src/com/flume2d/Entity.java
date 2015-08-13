@@ -4,6 +4,7 @@ import java.util.*;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Disposable;
+import com.flume2d.graphics.Backdrop;
 import com.flume2d.graphics.Graphic;
 import com.flume2d.masks.*;
 import com.flume2d.math.*;
@@ -36,6 +37,7 @@ public class Entity implements Disposable
 		setGraphic(graphic);
 		setMask(mask);
 		this.layer = 0;
+		this.followCamera = true;
 	}
 	
 	/**
@@ -56,10 +58,10 @@ public class Entity implements Disposable
 	 */
 	public Entity collide(String type, float ratio)
 	{
-		if (scene == null)
+		if (world == null)
 			return null;
 		
-		LinkedList<Entity> list = scene.getTypes(type);
+		LinkedList<Entity> list = world.getTypes(type);
 		if (list == null)
 			return null;
 		
@@ -87,10 +89,10 @@ public class Entity implements Disposable
 	 */
 	public Entity overlaps(String type)
 	{
-		if (scene == null)
+		if (world == null)
 			return null;
 		
-		LinkedList<Entity> list = scene.getTypes(type);
+		LinkedList<Entity> list = world.getTypes(type);
 		if (list == null)
 			return null;
 		
@@ -109,9 +111,9 @@ public class Entity implements Disposable
 	/**
 	 * Updates the entity's graphic and mask
 	 */
-	public void update()
+	public void update(float dt)
 	{
-		if (graphic != null && graphic.isActive()) graphic.update();
+		if (graphic != null && graphic.isActive()) graphic.update(dt);
 	}
 	
 	/**
@@ -121,7 +123,14 @@ public class Entity implements Disposable
 	public void render(SpriteBatch spriteBatch)
 	{
 		if (graphic == null) return;
-		graphic.render(spriteBatch);
+		if(graphic.getClass() == Backdrop.class && followCamera)
+		{
+			graphic.render(spriteBatch, x + F2D.camera.position.x, y + F2D.camera.position.y);
+		}
+		else
+		{
+			graphic.render(spriteBatch, x, y);
+		}
 	}
 	
 	/**
@@ -168,7 +177,7 @@ public class Entity implements Disposable
 	
 	public void setGraphic(Graphic graphic)
 	{
-		if (graphic == null) return;
+		if(graphic == null) return;
 		this.graphic = graphic;
 	}
 	
@@ -176,20 +185,21 @@ public class Entity implements Disposable
 	{
 		if (graphic != null) graphic.dispose();
 	}
-
-	public void setScene(Scene scene) { this.scene = scene; }
-	public boolean hasScene() { return (scene != null); }
+	
+	public void setWorld(World world) { this.world = world; }
+	public boolean hasWorld() { return (world != null); }
 
 	public void added() { }
 	public void removed() { }
 	
-	public String name;
-	public String type;
+	public String tagName;
+	public String collisionType;
 	public int layer;
+	public boolean followCamera;
 
 	private Graphic graphic;
 	private Mask mask;
 	
-	protected Scene scene;
+	protected World world;
 	
 }

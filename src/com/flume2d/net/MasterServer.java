@@ -5,7 +5,6 @@ import java.util.*;
 
 public class MasterServer extends Connection
 {
-	
 	private class Game
 	{
 		int  ipAddress;
@@ -135,10 +134,12 @@ public class MasterServer extends Connection
 	public static void main(String[] args)
 	{
 		MasterServer server = new MasterServer(6000);
-		while ( true )
+		boolean running = true;
+		while ( running )
 		{
 			server.update();
 		}
+		server.close();
 	}
 	
 	private HashMap<Integer, LinkedList<Game>> games;

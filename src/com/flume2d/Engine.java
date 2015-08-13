@@ -2,32 +2,36 @@ package com.flume2d;
 
 import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.*;
-import com.flume2d.input.Input;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 /**
  * The game engine singleton class
  * @author matt.tuttle
  */
 public class Engine implements ApplicationListener
-{
-	public static int width;
-	public static int height;
-	public static float elapsed = 0;
-
+{	
 	@Override
 	public void create()
 	{
-		Engine.width = Gdx.graphics.getWidth();
-		Engine.height = Gdx.graphics.getHeight();
-		Gdx.input.setInputProcessor(new Input());
+		spritebatch = new SpriteBatch();
+		
+		F2D.Initialize(this);
+		
+		//Gdx.input.setInputProcessor(new Input());
 		running = true;
 	}
 
 	@Override
 	public void dispose()
 	{
-		if (scene != null)
-			scene.dispose();
+		spritebatch.dispose();
+		F2D.background.dispose();
+		
+		if (currentWorld != null)
+			currentWorld.dispose();
+		
+		if(newWorld != null)
+			newWorld.dispose();
 	}
 
 	@Override
@@ -39,27 +43,34 @@ public class Engine implements ApplicationListener
 	@Override
 	public void render()
 	{
-		elapsed += Gdx.graphics.getDeltaTime();
-		while(elapsed > frameRate)
+		if (newWorld != null)
 		{
-			if (newScene != null)
-			{
-				scene.dispose();
-				scene = newScene;
-				newScene = null;
-			}
-			scene.update();
-			Input.update();
-			elapsed -= frameRate;
+			currentWorld.dispose();
+			currentWorld = newWorld;
+			newWorld = null;
 		}
 		
-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-		scene.render();
+		if(currentWorld != null)
+		{
+			currentWorld.update(Gdx.graphics.getDeltaTime());
+		}
+		
+//		Input.update();
+		F2D.viewport.apply();
+		Gdx.gl.glClearColor(0, 0, 0, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		if(currentWorld != null)
+		{
+			currentWorld.render(spritebatch);
+		}
 	}
 
 	@Override
 	public void resize(int width, int height)
 	{
+		F2D.windowWidth = width;
+		F2D.windowHeight = height;
+		F2D.viewport.update(width, height);
 	}
 
 	@Override
@@ -68,22 +79,22 @@ public class Engine implements ApplicationListener
 		running = true;
 	}
 	
-	public boolean isRunning()
+	public boolean IsRunning()
 	{
 		return running;
 	}
 	
-	public static void setScene(Scene newScene)
+	public static void SetWorld(World newWorld)
 	{
-		if (Engine.scene == null)
-			Engine.scene = newScene;
+		if (Engine.currentWorld == null)
+			Engine.currentWorld = newWorld;
 		else
-			Engine.newScene = newScene;
+			Engine.newWorld = newWorld;
 	}
 	
-	private float frameRate = 1.0f / 60.0f;
 	private boolean running;
-	private static Scene scene;
-	private static Scene newScene;
-
+	private static World currentWorld;
+	private static World newWorld;
+	
+	private SpriteBatch spritebatch;
 }

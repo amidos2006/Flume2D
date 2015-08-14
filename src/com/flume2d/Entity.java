@@ -3,11 +3,11 @@ package com.flume2d;
 import java.util.*;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.flume2d.graphics.Backdrop;
 import com.flume2d.graphics.Graphic;
 import com.flume2d.masks.*;
-import com.flume2d.math.*;
 import com.flume2d.tween.Tween;
 
 public class Entity implements Disposable
@@ -64,24 +64,18 @@ public class Entity implements Disposable
 	}
 	
 	/**
-	 * Collision checking that separates objects on an axis
-	 * @param type the type to check collisions against
-	 * @return the entity we collided with
+	 * Checks for a collision against an Entity type.
+	 * @param	type		The Entity type to check for.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @return	The first Entity collided with, or null if none were collided.
 	 */
-	public Entity collide(String type)
-	{
-		return collide(type, 1.0f);
-	}
-	
-	/**
-	 * Collision checking that separates objects on an axis
-	 * @param type the type to check collisions against
-	 * @param ratio the ratio to push away from the object (should always be less than 1)
-	 * @return the entity we collided with
-	 */
-	public Entity collide(String type, float ratio)
+	public Entity collide(String type, float x, float y)
 	{
 		if (world == null)
+			return null;
+		
+		if(mask == null)
 			return null;
 		
 		LinkedList<Entity> list = world.getTypes(type);
@@ -92,43 +86,154 @@ public class Entity implements Disposable
 		while (it.hasNext())
 		{
 			Entity e = it.next();
-			Vector2 result = null;
-			result = mask.collide(e.mask);
-			if (result != null)
+			if(collideWith(e, x, y) != null)
 			{
-				if (ratio > 1) ratio = 1;
-				x += result.x * ratio;
-				y += result.y * ratio;
 				return e;
 			}
 		}
+		
 		return null;
 	}
 	
 	/**
-	 * Faster collision checking without calculating the separating axis
-	 * @param type the type to check for overlapping
-	 * @return the entity we overlap with, if any
+	 * Checks for collision against multiple Entity types.
+	 * @param	types		An Array or Vector of Entity types to check for.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @return	The first Entity collided with, or null if none were collided.
 	 */
-	public Entity overlaps(String type)
+	public Entity collide(String[] types, float x, float y)
+	{
+		for (int i=0; i < types.length; i++)
+		{
+			Entity e = collide(types[i], x, y);
+			if(e != null)
+			{
+				return e;
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Checks if this Entity collides with a specific Entity.
+	 * @param	e		The Entity to collide against.
+	 * @param	x		Virtual x position to place this Entity.
+	 * @param	y		Virtual y position to place this Entity.
+	 * @return	The Entity if they overlap, or null if they don't.
+	 */
+	public Entity collideWith(Entity e, float x, float y)
 	{
 		if (world == null)
+			return null;
+		
+		if(mask == null || e.mask == null || e == this)
+			return null;
+		
+		float tempX = this.x;
+		float tempY = this.y;
+		
+		this.x = x;
+		this.y = y;
+		
+		if(mask.collide(e.mask))
+		{
+			this.x = tempX;
+			this.y = tempY;
+			return e;
+		}
+		
+		this.x = tempX;
+		this.y = tempY;
+		return null;
+	}
+	
+	/**
+	 * Checks if this Entity overlaps the specified rectangle.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @param	rX			X position of the rectangle.
+	 * @param	rY			Y position of the rectangle.
+	 * @param	rWidth		Width of the rectangle.
+	 * @param	rHeight		Height of the rectangle.
+	 * @return	If they overlap.
+	 */
+	public boolean collideRect(float x, float y, float rX, float rY, float rWidth, float rHeight)
+	{
+		F2D.testEntity.x = rX;
+		F2D.testEntity.y = rY;
+		//((AABB)F2D.testEntity.mask).bounds.width = rWidth;
+		//((AABB)F2D.testEntity.mask).bounds.height = rHeight;
+		
+		return collideWith(F2D.testEntity, x, y) != null;
+	}
+	
+	/**
+	 * Checks if this Entity overlaps the specified position.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @param	pX			X position.
+	 * @param	pY			Y position.
+	 * @return	If the Entity intersects with the position.
+	 */
+	public boolean collidePoint(float x, float y, float pX, float pY)
+	{
+		return collideRect(x, y, pX, pY, 1, 1);
+	}
+	
+	/**
+	 * Populates an array with all collided Entities of a type.
+	 * @param	type		The Entity type to check for.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @param	array		The Array or Vector object to populate.
+	 * @return	The array, populated with all collided Entities.
+	 */
+	public Array<Entity> collideInto(String type, float x, float y)
+	{
+		if (world == null)
+			return null;
+		
+		if(mask == null)
 			return null;
 		
 		LinkedList<Entity> list = world.getTypes(type);
 		if (list == null)
 			return null;
 		
+		Array<Entity> results = new Array<Entity>();
 		Iterator<Entity> it = list.iterator();
 		while (it.hasNext())
 		{
 			Entity e = it.next();
-			if (mask.overlaps(e.mask))
+			if(collideWith(e, x, y) != null)
 			{
-				return e;
+				results.add(e);
 			}
 		}
-		return null;
+		
+		return results;
+	}
+	
+	/**
+	 * Populates an array with all collided Entities of multiple types.
+	 * @param	types		An array of Entity types to check for.
+	 * @param	x			Virtual x position to place this Entity.
+	 * @param	y			Virtual y position to place this Entity.
+	 * @param	array		The Array or Vector object to populate.
+	 * @return	The array, populated with all collided Entities.
+	 */
+	public Array<Entity> collideInto(String[] types, float x, float y)
+	{
+		Array<Entity> results = new Array<Entity>();
+		for (int i = 0; i < types.length; i++)
+		{
+			Array<Entity> temp = collideInto(types[i], x, y);
+			results.addAll(temp);
+		}
+		
+		return results;
 	}
 
 	/**
@@ -216,25 +321,28 @@ public class Entity implements Disposable
 		return Math.sqrt((x - px) * (x - px) + (y - py) * (y - py));
 	}
 	
-	/**
-	 * Checks if the entity's mask collides with a point
-	 * @param x the point's x-axis value
-	 * @param y the point's y-axis value
-	 * @return whether we collided with the entity
-	 */
-	public boolean collideAt(int x, int y)
-	{
-		if (mask == null)
-			return false;
-		
-		return mask.collideAt(x, y);
-	}
-	
 	public void setMask(Mask mask)
 	{
 		if (mask == null) return;
 		mask.parent = this;
 		this.mask = mask;
+	}
+	
+	public Mask getMask()
+	{
+		return mask;
+	}
+	
+	public void setHitBox(float width, float height)
+	{
+		Hitbox hitbox = new Hitbox(width, height);
+		setMask(hitbox);
+	}
+	
+	public void setHitBox(float originX, float originY, float width, float height)
+	{
+		Hitbox hitbox = new Hitbox(originX, originY, width, height);
+		setMask(hitbox);
 	}
 	
 	public void setGraphic(Graphic graphic)
@@ -246,6 +354,7 @@ public class Entity implements Disposable
 	public void dispose()
 	{
 		if (graphic != null) graphic.dispose();
+		if (mask != null) mask.dispose();
 	}
 	
 	public void setWorld(World world) { this.world = world; }

@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.flume2d.audio.Sfx;
+import com.flume2d.masks.Hitbox;
 
 public class F2D {
 	private static float volume;
@@ -28,6 +29,7 @@ public class F2D {
 	public static Color backColor;
 	public static Texture background;
 	public static boolean smooth;
+	public static Entity testEntity;
 	
 	public static void Initialize(Engine e)
 	{
@@ -35,6 +37,8 @@ public class F2D {
 		smooth = false;
 		volume = 1;
 		random = new Random(System.currentTimeMillis());
+		testEntity = new Entity();
+		testEntity.setMask(new Hitbox(1, 1));
 		sfxCache = new LinkedList<Sfx>();
 		windowWidth = Gdx.graphics.getWidth();
 		windowHeight = Gdx.graphics.getHeight();

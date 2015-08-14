@@ -130,7 +130,7 @@ public class World implements Disposable
 		while(it.hasNext())
 		{
 			Entity e = it.next();
-			if (e.collideAt(x, y)) return e;
+			if (e.collidePoint(e.x, e.y, x, y)) return e;
 		}
 		return null;
 	}

@@ -1,92 +1,95 @@
 package com.flume2d.masks;
 
-import com.flume2d.math.*;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Grid extends Mask
 {
-	
-	protected AABB box;
-	protected boolean[][] grid;
-	
-	public Grid(int width, int height, int tileWidth, int tileHeight)
+	public Grid(int width, int height, float tileWidth, float tileHeight)
 	{
-		box = new AABB(tileWidth, tileHeight);
-		grid = new boolean[width][height];
+		grid = new boolean[height][width];
+		test = new Hitbox(tileWidth, tileHeight);
 	}
 	
-	public boolean validTile(int column, int row)
+	public void loadCSV(String csv)
 	{
-		return (column < grid.length && row < grid[0].length);
-	}
-	
-	public void setTile(int column, int row)
-	{
-		if (validTile(column, row))
-			grid[column][row] = true;
-	}
-	
-	public void clearTile(int column, int row)
-	{
-		if (validTile(column, row))
-			grid[column][row] = false;
-	}
-	
-	public boolean getTile(int column, int row)
-	{
-		if (validTile(column, row))
-			return grid[column][row];
-		return false;
-	}
-	
-	public void setRect(int column, int row, int width, int height)
-	{
-		for (int i = 0; i < width; i++)
+		String[] values = csv.split(",");
+		int index = 0;
+		for (int i = 0; i < grid.length; i++)
 		{
-			for (int j = 0; j < height; j++)
+			for (int j = 0; j < grid[0].length; j++)
 			{
-				setTile(column + i, row + height);
+				if(Integer.parseInt(values[index]) == 0)
+				{
+					clearTile(j, i);
+				}
+				else
+				{
+					setTile(j, i);
+				}
+				
+				index++;
 			}
 		}
 	}
 	
-	public void clearRect(int column, int row, int width, int height)
+	public void setTile(int xTile, int yTile)
 	{
-		for (int i = 0; i < width; i++)
-		{
-			for (int j = 0; j < height; j++)
-			{
-				clearTile(column + i, row + height);
-			}
-		}
+		grid[yTile][xTile] = true;
 	}
-
+	
+	public void clearTile(int xTile, int yTile)
+	{
+		grid[yTile][xTile] = false;
+	}
+	
 	@Override
-	public Vector2 collide(Mask mask)
+	public void dispose() 
 	{
-		//Rectangle bounds = mask.getBounds();
 		
-		return null;
 	}
-
+	
 	@Override
-	public boolean collideAt(int x, int y)
+	public boolean collide(Mask mask)
 	{
-		// TODO Auto-generated method stub
+		if(super.collide(mask))
+		{
+			Rectangle bounds = getBounds();
+			for (int i = 0; i < grid.length; i++)
+			{
+				for (int j = 0; j < grid[0].length; j++)
+				{
+					if(grid[i][j])
+					{
+						test.x = bounds.x + j * tileWidth;
+						test.y = bounds.y + i * tileHeight;
+						test.parent = parent;
+						
+						if(test.collide(mask))
+						{
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
 		return false;
 	}
-
+	
 	@Override
-	public boolean overlaps(Mask mask)
+	public Rectangle getBounds() 
 	{
-		// TODO Auto-generated method stub
-		return false;
+		Rectangle rect = new Rectangle();
+		rect.x = parent.x + x;
+		rect.y = parent.y + y;
+		rect.width = grid[0].length * tileWidth;
+		rect.height = grid.length * tileHeight;
+		
+		return rect;
 	}
-
-	@Override
-	public Rectangle getBounds()
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
+	private boolean[][] grid;
+	private float tileWidth;
+	private float tileHeight;
+	private Hitbox test;
 }

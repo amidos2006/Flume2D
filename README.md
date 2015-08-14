@@ -16,9 +16,11 @@ Features
 * World Management/Sorting
 	* Layer based rendering (z-index)
 	* Type based collision handling (ex. player VS enemy)
-* SAT collision
-	* Similar to FlashPunk masks
-	* AABB, Circle, Grid and Polygon collision
+* Collision mask similar to FlashPunk
+	* Hitbox
+	* Pixelmask
+	* Grid
+	* Masklist
 * Basic UDP Networking
 * Tweens similar to FlashPunk
 	* Alarm
@@ -28,7 +30,6 @@ Features
 Todo
 ------------------------
 * Particle System
-* Collision Polygon editor
 * GUI
 
 License
